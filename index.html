@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aprende Git, GitHub y GitSchool | SENA</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- Configuración de Colores Institucionales SENA -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            sena: {
+              DEFAULT: '#39A900', // Verde oficial SENA
+              dark: '#2E8B00',
+              darker: '#1E5E00',
+              light: '#EAF7E5',
+              border: '#BDE5AF',
+            },
+            darkSurface: '#0F172A',
+            darkCard: '#1E293B'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Estilos base y utilidades de animación */
+    .fade-element {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .fade-element.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Animación de pulso para nodos Git */
+    @keyframes gitGlow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(57, 169, 0, 0.5); }
+      50% { box-shadow: 0 0 0 10px rgba(57, 169, 0, 0); }
+    }
+    .git-pulse {
+      animation: gitGlow 2.4s infinite;
+    }
+
+    /* Línea de tiempo animada */
+    .timeline-progress {
+      height: 0%;
+      transition: height 1.8s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .timeline-progress.active {
+      height: 100%;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased font-sans flex flex-col min-h-screen">
+
+  <!-- BANNER DE ALMACENAMIENTO Y PRIVACIDAD (MODAL / TOAST INFERIOR) -->
+  <div id="storage-banner" class="fixed bottom-4 left-4 right-4 sm:max-w-md sm:left-auto sm:right-6 z-50 bg-white border border-slate-200 p-5 rounded-2xl shadow-2xl transition-all duration-500 transform translate-y-24 opacity-0 pointer-events-none">
+    <div class="flex items-start gap-3">
+      <div class="p-2 bg-sena-light text-sena rounded-xl flex-shrink-0 mt-0.5">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+        </svg>
+      </div>
+      <div class="flex-1">
+        <h4 class="font-bold text-slate-900 text-sm">Privacidad y Almacenamiento Local</h4>
+        <p class="text-xs text-slate-600 mt-1 leading-relaxed">
+          Usamos <span class="font-mono font-medium text-slate-800">localStorage</span> únicamente para recordar tus preferencias y registrar un contador de tus visitas pedagógicas. No recolectamos información personal.
+        </p>
+        <div class="flex items-center gap-2 mt-4">
+          <button id="btn-accept-storage" class="flex-1 bg-sena hover:bg-sena-dark text-white text-xs font-semibold py-2 px-3 rounded-lg transition-colors shadow-sm">
+            Aceptar
+          </button>
+          <button id="btn-reject-storage" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold py-2 px-3 rounded-lg transition-colors">
+            Rechazar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NAVEGACIÓN SUPERIOR INSTITUCIONAL -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-100 shadow-sm transition-all">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+      
+      <!-- Logo e Identidad SENA -->
+      <a href="#" class="flex items-center gap-3 group">
+        <div class="w-10 h-10 rounded-full bg-sena text-white flex items-center justify-center font-extrabold text-xl tracking-tighter shadow-md group-hover:scale-105 transition-transform">
+          <!-- Símbolo estilizado SENA -->
+          <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2L4 6v6c0 5.55 3.84 10.74 8 12 4.16-1.26 8-6.45 8-12V6l-8-4zm0 3.3l5.5 2.75v4.58c0 3.82-2.65 7.39-5.5 8.35-2.85-.96-5.5-4.53-5.5-8.35V8.05L12 5.3z"/>
+          </svg>
+        </div>
+        <div class="flex flex-col">
+          <span class="text-sm font-black tracking-tight text-slate-900 leading-tight">SENA <span class="text-sena">DEV</span></span>
+          <span class="text-[10px] font-medium text-slate-500 uppercase tracking-wider">Control de Versiones</span>
+        </div>
+      </a>
+
+      <!-- Menú desktop -->
+      <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
+        <a href="#fundamentos" class="hover:text-sena transition-colors">Fundamentos</a>
+        <a href="#gitschool" class="hover:text-sena transition-colors">GitSchool</a>
+        <a href="#flujo" class="hover:text-sena transition-colors">Flujo de Trabajo</a>
+        <a href="#recursos" class="hover:text-sena transition-colors">Recursos</a>
+      </nav>
+
+      <!-- Contador de Visitas Badge & Menú Mobile Trigger -->
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 bg-sena-light border border-sena-border px-3 py-1.5 rounded-full text-xs font-medium text-sena-darker">
+          <span class="w-2 h-2 rounded-full bg-sena animate-ping"></span>
+          <span id="visit-counter-badge">Visitas: <strong id="visit-count-display">...</strong></span>
+          <button id="btn-reset-visits" title="Reiniciar contador" class="text-slate-400 hover:text-red-500 ml-1 transition-colors text-[10px]">
+            ↺
+          </button>
+        </div>
+
+        <button id="mobile-menu-btn" class="md:hidden p-2 text-slate-600 hover:text-sena rounded-lg hover:bg-slate-100 transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
+          </svg>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Menú Desplegable Móvil -->
+    <div id="mobile-menu" class="hidden md:hidden border-t border-slate-100 bg-white px-4 py-3 space-y-2">
+      <a href="#fundamentos" class="mobile-nav-link block py-2 text-slate-700 hover:text-sena font-medium text-sm">Fundamentos Git y GitHub</a>
+      <a href="#gitschool" class="mobile-nav-link block py-2 text-slate-700 hover:text-sena font-medium text-sm">Simulador GitSchool</a>
+      <a href="#flujo" class="mobile-nav-link block py-2 text-slate-700 hover:text-sena font-medium text-sm">Paso a Paso del Flujo</a>
+      <a href="#recursos" class="mobile-nav-link block py-2 text-slate-700 hover:text-sena font-medium text-sm">Recursos Externos</a>
+    </div>
+  </header>
+
+  <main class="flex-grow">
+    
+    <!-- SECCIÓN HERO -->
+    <section class="relative overflow-hidden bg-gradient-to-b from-emerald-50/70 via-white to-slate-50 pt-12 pb-16 sm:py-24 border-b border-slate-100">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
+        <div class="text-center max-w-3xl mx-auto space-y-6 fade-element">
+          
+          <div class="inline-flex items-center gap-2 bg-sena-light/80 border border-sena-border px-3.5 py-1.5 rounded-full text-xs font-semibold text-sena-dark tracking-wide uppercase">
+            <span>🇨🇴 Formación Profesional Integral</span>
+            <span class="text-slate-300">•</span>
+            <span>Tecnología ADSO & Redes</span>
+          </div>
+
+          <h1 class="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-tight">
+            Domina el control de versiones con <span class="text-sena underline decoration-sena-border decoration-wavy underline-offset-8">Git y GitHub</span>
+          </h1>
+
+          <p class="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl mx-auto">
+            Guía práctica para <strong>aprendices e instructores del SENA</strong>. Aprende a gestionar tus proyectos colaborativos, proteger tu código fuente y experimentar visualmente con el simulador <strong>GitSchool</strong>.
+          </p>
+
+          <div class="flex flex-col sm:flex-row items-center justify-center gap-3 pt-3">
+            <a href="#flujo" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-sena hover:bg-sena-dark text-white font-semibold px-6 py-3.5 rounded-xl shadow-lg shadow-sena/25 hover:shadow-sena/40 transition-all hover:-translate-y-0.5">
+              <span>Explorar el Flujo de Trabajo</span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </a>
+            <a href="#gitschool" class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-semibold px-6 py-3.5 rounded-xl transition-all hover:border-slate-300">
+              <span>Simulador GitSchool</span>
+              <span class="text-xs px-2 py-0.5 rounded bg-emerald-100 text-sena-dark font-mono font-bold">Interactivo</span>
+            </a>
+          </div>
+
+          <!-- Mini highlights -->
+          <div class="grid grid-cols-3 gap-2 pt-6 max-w-md mx-auto text-center border-t border-slate-200/60">
+            <div>
+              <p class="text-xl sm:text-2xl font-black text-slate-900">100%</p>
+              <p class="text-xs text-slate-500 font-medium">Práctico y Gratuito</p>
+            </div>
+            <div>
+              <p class="text-xl sm:text-2xl font-black text-sena">Git + GH</p>
+              <p class="text-xs text-slate-500 font-medium">Estándar Global</p>
+            </div>
+            <div>
+              <p class="text-xl sm:text-2xl font-black text-slate-900">SENA</p>
+              <p class="text-xs text-slate-500 font-medium">Calidad de Formación</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN: QUÉ ES GIT Y QUÉ ES GITHUB -->
+    <section id="fundamentos" class="py-16 sm:py-24 bg-white border-b border-slate-100">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6">
+        
+        <div class="text-center max-w-2xl mx-auto mb-14 fade-element">
+          <span class="text-xs uppercase tracking-widest font-bold text-sena bg-sena-light px-3 py-1 rounded-full">Conceptos Clave</span>
+          <h2 class="text-2xl sm:text-4xl font-extrabold text-slate-900 mt-3">Comprende la diferencia</h2>
+          <p class="text-slate-600 text-sm sm:text-base mt-2">Uno de los errores más comunes de un aprendiz es confundir Git con GitHub. Aquí te lo explicamos con precisión técnica.</p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8">
+          
+          <!-- Tarjeta Git -->
+          <div class="fade-element bg-slate-50 border border-slate-200 rounded-3xl p-6 sm:p-8 hover:shadow-xl hover:border-sena/40 transition-all duration-300 flex flex-col justify-between group">
+            <div>
+              <div class="w-14 h-14 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center font-mono font-bold text-2xl mb-6 shadow-sm group-hover:scale-110 transition-transform">
+                <!-- Git Logo Icon SVG -->
+                <svg class="w-8 h-8" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M2.6 10.59L8.38 4.8a1.69 1.69 0 012.39 0l1.19 1.2-2.38 2.38a2.53 2.53 0 00-.77 2.22l-2.07 2.08a2.54 2.54 0 101.2 1.2l2.03-2.03c.5.21 1.08.24 1.62.06l2.45 2.45a2.54 2.54 0 101.2-1.2L12.8 10.7a2.54 2.54 0 00-.63-2.3l2.36-2.36 6.88 6.88a1.69 1.69 0 010 2.39L15.63 21a1.69 1.69 0 01-2.39 0L2.6 12.98a1.69 1.69 0 010-2.39z"/>
+                </svg>
+              </div>
+              <span class="text-xs font-bold text-red-600 uppercase tracking-wider">Herramienta Local</span>
+              <h3 class="text-2xl font-bold text-slate-900 mt-1 mb-3">¿Qué es Git?</h3>
+              <p class="text-slate-600 text-sm sm:text-base leading-relaxed mb-4">
+                Git es un <strong>sistema de control de versiones distribuido</strong> gratuito y de código abierto. Funciona directamente en tu computador local a través de la terminal o consola.
+              </p>
+              <ul class="space-y-2 text-sm text-slate-600 mb-6">
+                <li class="flex items-start gap-2">
+                  <span class="text-sena font-bold">✓</span> Registra el historial de cambios archivo por archivo mediante <em class="font-mono text-xs bg-slate-200 px-1 py-0.5 rounded">commits</em>.
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-sena font-bold">✓</span> Permite crear ramificaciones (<em class="font-mono text-xs bg-slate-200 px-1 py-0.5 rounded">branches</em>) para trabajar en nuevas funciones sin dañar el proyecto base.
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-sena font-bold">✓</span> Funciona sin necesidad de conexión a internet.
+                </li>
+              </ul>
+            </div>
+            <a href="https://git-scm.com" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200 text-slate-800 text-sm font-semibold hover:text-sena hover:border-sena transition-colors">
+              <span>Sitio oficial de Git (Descargas y Documentación)</span>
+              <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+            </a>
+          </div>
+
+          <!-- Tarjeta GitHub -->
+          <div class="fade-element bg-slate-50 border border-slate-200 rounded-3xl p-6 sm:p-8 hover:shadow-xl hover:border-sena/40 transition-all duration-300 flex flex-col justify-between group">
+            <div>
+              <div class="w-14 h-14 bg-slate-900 text-white rounded-2xl flex items-center justify-center font-bold text-2xl mb-6 shadow-sm group-hover:scale-110 transition-transform">
+                <!-- GitHub Invertocat SVG -->
+                <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+                </svg>
+              </div>
+              <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Plataforma en la Nube</span>
+              <h3 class="text-2xl font-bold text-slate-900 mt-1 mb-3">¿Qué es GitHub?</h3>
+              <p class="text-slate-600 text-sm sm:text-base leading-relaxed mb-4">
+                GitHub es una <strong>plataforma de alojamiento en la nube</strong> que almacena repositorios de Git. Es el punto de encuentro donde instructores y aprendices comparten código, colaboran y revisan proyectos formativos.
+              </p>
+              <ul class="space-y-2 text-sm text-slate-600 mb-6">
+                <li class="flex items-start gap-2">
+                  <span class="text-sena font-bold">✓</span> Almacena respaldos remotos de tus proyectos en servidores seguros.
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-sena font-bold">✓</span> Facilita la revisión de código mediante <em class="font-mono text-xs bg-slate-200 px-1 py-0.5 rounded">Pull Requests</em> e Issues.
+                </li>
+                <li class="flex items-start gap-2">
+                  <span class="text-sena font-bold">✓</span> Funciona como portafolio profesional para ingresar a la industria TI.
+                </li>
+              </ul>
+            </div>
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="inline-flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200 text-slate-800 text-sm font-semibold hover:text-sena hover:border-sena transition-colors">
+              <span>Ir a GitHub (Crea tu cuenta gratuita)</span>
+              <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+            </a>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECCIÓN DEDICADA: GITSCHOOL (SIMULADOR VISUAL) -->
+    <section id="gitschool" class="py-16 sm:py-24 bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 text-white relative overflow-hidden">
+      
+      <!-- Efecto de gradiente de fondo -->
+      <div class="absolute -right-20 -bottom-20 w-96 h-96 bg-sena/20 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
+        
+        <div class="grid lg:grid-cols-12 gap-10 items-center">
+          
+          <div class="lg:col-span-6 space-y-6 fade-element">
+            <div class="inline-flex items-center gap-2 bg-sena/20 text-emerald-300 border border-sena/40 px-3 py-1 rounded-full text-xs font-semibold">
+              <span class="w-2 h-2 rounded-full bg-sena"></span>
+              Recurso Didáctico Recomendado por Instructores
+            </div>
+            
+            <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
+              Aprende visualmente con <span class="text-sena">GitSchool</span> (Visualizing Git)
+            </h2>
+            
+            <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+              ¿Se te dificulta entender qué pasa internamente cuando ejecutas <code class="text-emerald-400 font-mono text-xs bg-slate-900/80 px-1.5 py-0.5 rounded">git commit</code> o <code class="text-emerald-400 font-mono text-xs bg-slate-900/80 px-1.5 py-0.5 rounded">git checkout -b</code>?
+            </p>
+            <p class="text-slate-300 text-sm sm:text-base leading-relaxed">
+              <strong>GitSchool</strong> es un simulador interactivo de código abierto que renderiza en tiempo real el árbol de nodos, punteros HEAD y ramas a medida que escribes comandos en un entorno de pruebas seguro sin riesgo de dañar tus archivos.
+            </p>
+
+            <div class="space-y-3 pt-2">
+              <div class="flex items-center gap-3 text-sm text-slate-200">
+                <div class="w-6 h-6 rounded-full bg-sena/30 text-emerald-400 flex items-center justify-center font-bold text-xs">1</div>
+                <span>Observa cómo se crea cada nodo de confirmación con su hash.</span>
+              </div>
+              <div class="flex items-center gap-3 text-sm text-slate-200">
+                <div class="w-6 h-6 rounded-full bg-sena/30 text-emerald-400 flex items-center justify-center font-bold text-xs">2</div>
+                <span>Entiende gráficamente las fusiones (<em class="text-emerald-300 font-mono">merge</em>) y rebase.</span>
+              </div>
+              <div class="flex items-center gap-3 text-sm text-slate-200">
+                <div class="w-6 h-6 rounded-full bg-sena/30 text-emerald-400 flex items-center justify-center font-bold text-xs">3</div>
+                <span>Aprende a tu propio ritmo con modo sandbox libre o lecciones guiadas.</span>
+              </div>
+            </div>
+
+            <div class="pt-4">
+              <a href="https://git-school.github.io/visualizing-git/" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-3 bg-sena hover:bg-sena-dark text-white font-bold px-6 py-4 rounded-xl shadow-lg shadow-sena/30 transition-all hover:scale-105">
+                <span>Abrir Simulador GitSchool</span>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+              </a>
+              <span class="block text-xs text-slate-400 mt-2">Enlace directo a git-school.github.io/visualizing-git</span>
+            </div>
+          </div>
+
+          <!-- Mockup Interactivo del Visualizador -->
+          <div class="lg:col-span-6 fade-element">
+            <div class="bg-slate-900 border border-slate-700 rounded-3xl p-5 sm:p-6 shadow-2xl space-y-4">
+              <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2">
+                  <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                  <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                  <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                  <span class="text-xs font-mono text-slate-400 ml-2">sandbox: visualizing-git</span>
+                </div>
+                <span class="text-[11px] font-mono text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800">HEAD -> main</span>
+              </div>
+
+              <!-- Simulación gráfica de nodos -->
+              <div class="py-6 px-4 bg-slate-950/60 rounded-xl border border-slate-800 flex flex-col items-center justify-center min-h-[190px] relative overflow-hidden">
+                <div class="flex items-center gap-4 sm:gap-8 z-10">
+                  
+                  <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 rounded-full bg-slate-700 border-2 border-slate-500 flex items-center justify-center text-xs font-mono font-bold text-slate-300">c0</div>
+                    <span class="text-[10px] font-mono text-slate-400 mt-1">init</span>
+                  </div>
+
+                  <div class="w-8 sm:w-12 h-1 bg-slate-700"></div>
+
+                  <div class="flex flex-col items-center">
+                    <div class="w-10 h-10 rounded-full bg-slate-700 border-2 border-slate-500 flex items-center justify-center text-xs font-mono font-bold text-slate-300">c1</div>
+                    <span class="text-[10px] font-mono text-slate-400 mt-1">readme</span>
+                  </div>
+
+                  <div class="w-8 sm:w-12 h-1 bg-sena"></div>
+
+                  <div class="flex flex-col items-center">
+                    <div class="w-12 h-12 rounded-full bg-sena border-2 border-white flex items-center justify-center text-sm font-mono font-bold text-white shadow-lg git-pulse">c2</div>
+                    <span class="text-[11px] font-mono font-bold text-sena mt-1">main</span>
+                  </div>
+
+                </div>
+
+                <div class="absolute bottom-2 left-4 text-[10px] text-slate-500 font-mono">
+                  Visualización de commits en tiempo real
+                </div>
+              </div>
+
+              <!-- Terminal interactiva de demostración -->
+              <div class="bg-black/80 rounded-xl p-4 font-mono text-xs text-slate-300 space-y-1.5 border border-slate-800/80">
+                <p class="text-slate-400">$ git checkout -b feature/autenticacion</p>
+                <p class="text-emerald-400">Switched to a new branch 'feature/autenticacion'</p>
+                <p class="text-slate-400">$ git commit -m "feat: login aprendices SENA"</p>
+                <p class="text-yellow-400">[feature/autenticacion a3f1c9] feat: login aprendices SENA</p>
+                <div class="flex items-center gap-1 pt-1 text-sena font-bold">
+                  <span>$</span>
+                  <span class="animate-pulse">git push origin feature/autenticacion_</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECCIÓN: FLUJO BÁSICO DE TRABAJO (TIMELINE ANIMADA) -->
+    <section id="flujo" class="py-16 sm:py-24 bg-slate-50 border-b border-slate-200">
+      <div class="max-w-4xl mx-auto px-4 sm:px-6">
+        
+        <div class="text-center max-w-2xl mx-auto mb-16 fade-element">
+          <span class="text-xs uppercase tracking-widest font-bold text-sena bg-sena-light px-3 py-1 rounded-full">Guía Paso a Paso</span>
+          <h2 class="text-2xl sm:text-4xl font-extrabold text-slate-900 mt-3">Flujo de Trabajo Estándar</h2>
+          <p class="text-slate-600 text-sm sm:text-base mt-2">Los cuatro pasos fundamentales que todo aprendiz SENA aplica en proyectos formativos y ambientes empresariales.</p>
+        </div>
+
+        <!-- Contenedor Timeline Vertical -->
+        <div class="relative pl-6 sm:pl-10 space-y-10">
+          
+          <!-- Línea vertical animada que se llena -->
+          <div class="absolute left-2.5 sm:left-4 top-3 bottom-3 w-1 bg-slate-200 rounded-full overflow-hidden">
+            <div id="flujo-progress-bar" class="timeline-progress w-full bg-sena"></div>
+          </div>
+
+          <!-- Paso 1: Crear Repositorio -->
+          <div class="relative fade-element group">
+            <!-- Icono Punto -->
+            <div class="absolute -left-[30px] sm:-left-[39px] top-1.5 w-7 h-7 rounded-full bg-white border-4 border-sena text-sena flex items-center justify-center text-xs font-bold shadow-md group-hover:scale-125 transition-transform">
+              1
+            </div>
+            
+            <div class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-md hover:border-sena/40 transition-all">
+              <span class="text-xs font-bold text-sena uppercase tracking-wide">Paso 01</span>
+              <h3 class="text-lg sm:text-xl font-bold text-slate-900 mt-1">Crear o Clonar el Repositorio</h3>
+              <p class="text-slate-600 text-sm mt-2 leading-relaxed">
+                Inicia un repositorio nuevo dentro de la carpeta de tu proyecto o descarga una copia de un repositorio grupal existente desde GitHub.
+              </p>
+              
+              <div class="mt-4 bg-slate-900 rounded-xl p-3 text-xs font-mono text-slate-200 space-y-1 overflow-x-auto">
+                <p class="text-slate-400"># Iniciar repositorio local nuevo:</p>
+                <p class="text-emerald-400 font-bold">$ git init</p>
+                <p class="text-slate-400 mt-2"># O clonar un proyecto existente del instructor:</p>
+                <p class="text-emerald-400 font-bold">$ git clone https://github.com/usuario/proyecto-sena.git</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Paso 2: Stage y Commit -->
+          <div class="relative fade-element group">
+            <div class="absolute -left-[30px] sm:-left-[39px] top-1.5 w-7 h-7 rounded-full bg-white border-4 border-sena text-sena flex items-center justify-center text-xs font-bold shadow-md group-hover:scale-125 transition-transform">
+              2
+            </div>
+            
+            <div class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-md hover:border-sena/40 transition-all">
+              <span class="text-xs font-bold text-sena uppercase tracking-wide">Paso 02</span>
+              <h3 class="text-lg sm:text-xl font-bold text-slate-900 mt-1">Preparar y Confirmar Cambios (Stage & Commit)</h3>
+              <p class="text-slate-600 text-sm mt-2 leading-relaxed">
+                Agrega los archivos modificados al área de preparación (<em class="italic">staging area</em>) y guarda una foto histórica de tu código con un mensaje descriptivo.
+              </p>
+              
+              <div class="mt-4 bg-slate-900 rounded-xl p-3 text-xs font-mono text-slate-200 space-y-1 overflow-x-auto">
+                <p class="text-slate-400"># Preparar todos los archivos modificados:</p>
+                <p class="text-emerald-400 font-bold">$ git add .</p>
+                <p class="text-slate-400 mt-2"># Crear el punto de control con mensaje claro:</p>
+                <p class="text-emerald-400 font-bold">$ git commit -m "feat: interfaz de formulario de matrícula"</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Paso 3: Git Push -->
+          <div class="relative fade-element group">
+            <div class="absolute -left-[30px] sm:-left-[39px] top-1.5 w-7 h-7 rounded-full bg-white border-4 border-sena text-sena flex items-center justify-center text-xs font-bold shadow-md group-hover:scale-125 transition-transform">
+              3
+            </div>
+            
+            <div class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-md hover:border-sena/40 transition-all">
+              <span class="text-xs font-bold text-sena uppercase tracking-wide">Paso 03</span>
+              <h3 class="text-lg sm:text-xl font-bold text-slate-900 mt-1">Subir a la Nube (Git Push)</h3>
+              <p class="text-slate-600 text-sm mt-2 leading-relaxed">
+                Transfiere tus confirmaciones locales hacia el repositorio remoto en GitHub para que tus compañeros e instructores tengan acceso.
+              </p>
+              
+              <div class="mt-4 bg-slate-900 rounded-xl p-3 text-xs font-mono text-slate-200 space-y-1 overflow-x-auto">
+                <p class="text-slate-400"># Subir rama principal al repositorio remoto:</p>
+                <p class="text-emerald-400 font-bold">$ git push -u origin main</p>
+                <p class="text-slate-400 mt-2"># O enviar tu rama de funcionalidad:</p>
+                <p class="text-emerald-400 font-bold">$ git push origin mi-rama-de-trabajo</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Paso 4: Pull Request -->
+          <div class="relative fade-element group">
+            <div class="absolute -left-[30px] sm:-left-[39px] top-1.5 w-7 h-7 rounded-full bg-white border-4 border-sena text-sena flex items-center justify-center text-xs font-bold shadow-md group-hover:scale-125 transition-transform">
+              4
+            </div>
+            
+            <div class="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm hover:shadow-md hover:border-sena/40 transition-all">
+              <span class="text-xs font-bold text-sena uppercase tracking-wide">Paso 04</span>
+              <h3 class="text-lg sm:text-xl font-bold text-slate-900 mt-1">Crear un Pull Request (PR) y Revisión</h3>
+              <p class="text-slate-600 text-sm mt-2 leading-relaxed">
+                Desde la plataforma GitHub, solicita la integración de tus cambios a la rama principal. El instructor o líder técnico del equipo revisará y aprobará el código antes de fusionarlo (<em class="italic">merge</em>).
+              </p>
+              
+              <div class="mt-4 p-3 bg-emerald-50 border border-sena-border rounded-xl text-xs text-sena-darker flex items-center gap-2">
+                <svg class="w-5 h-5 flex-shrink-0 text-sena" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>¡Buenas prácticas SENA! Nunca hagas push directo a <strong>main</strong> en proyectos de equipo; utiliza siempre ramas y Pull Requests.</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECCIÓN: RECURSOS Y ENLACES INSTITUCIONALES -->
+    <section id="recursos" class="py-16 sm:py-24 bg-white">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6">
+        
+        <div class="text-center max-w-2xl mx-auto mb-14 fade-element">
+          <span class="text-xs uppercase tracking-widest font-bold text-sena bg-sena-light px-3 py-1 rounded-full">Ecosistema</span>
+          <h2 class="text-2xl sm:text-4xl font-extrabold text-slate-900 mt-3">Enlaces y Recursos Esenciales</h2>
+          <p class="text-slate-600 text-sm sm:text-base mt-2">Herramientas oficiales y documentación recomendada para profundizar tu aprendizaje técnico.</p>
+        </div>
+
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          
+          <!-- Recurso 1: Git SCM -->
+          <div class="fade-element bg-slate-50 border border-slate-200 rounded-2xl p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
+            <div>
+              <div class="w-10 h-10 bg-red-100 text-red-600 rounded-lg flex items-center justify-center font-bold mb-4">
+                GIT
+              </div>
+              <h3 class="font-bold text-slate-900 text-lg mb-1">Git SCM Oficial</h3>
+              <p class="text-xs text-slate-600 leading-relaxed mb-4">
+                Manual oficial Pro Git en español, documentación completa de comandos e instaladores para Windows, macOS y Linux.
+              </p>
+            </div>
+            <a href="https://git-scm.com" target="_blank" rel="noopener noreferrer" class="text-sena font-semibold text-xs inline-flex items-center gap-1 hover:text-sena-dark">
+              <span>Visitar git-scm.com</span>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </a>
+          </div>
+
+          <!-- Recurso 2: GitHub -->
+          <div class="fade-element bg-slate-50 border border-slate-200 rounded-2xl p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
+            <div>
+              <div class="w-10 h-10 bg-slate-900 text-white rounded-lg flex items-center justify-center font-bold mb-4">
+                GH
+              </div>
+              <h3 class="font-bold text-slate-900 text-lg mb-1">GitHub</h3>
+              <p class="text-xs text-slate-600 leading-relaxed mb-4">
+                Plataforma líder mundial para desarrolladores. Aplica al paquete para estudiantes (GitHub Student Developer Pack) con tu correo @sena.edu.co.
+              </p>
+            </div>
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="text-sena font-semibold text-xs inline-flex items-center gap-1 hover:text-sena-dark">
+              <span>Visitar github.com</span>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </a>
+          </div>
+
+          <!-- Recurso 3: GitSchool -->
+          <div class="fade-element bg-slate-50 border border-slate-200 rounded-2xl p-6 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between">
+            <div>
+              <div class="w-10 h-10 bg-sena-light text-sena rounded-lg flex items-center justify-center font-bold mb-4">
+                VS
+              </div>
+              <h3 class="font-bold text-slate-900 text-lg mb-1">GitSchool Visualizer</h3>
+              <p class="text-xs text-slate-600 leading-relaxed mb-4">
+                Entorno interactivo para experimentar y entender cómo se mueven las ramas, commits y el apuntador HEAD en un gráfico animado.
+              </p>
+            </div>
+            <a href="https://git-school.github.io/visualizing-git/" target="_blank" rel="noopener noreferrer" class="text-sena font-semibold text-xs inline-flex items-center gap-1 hover:text-sena-dark">
+              <span>Visitar simulador GitSchool</span>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </a>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- PIE DE PÁGINA INSTITUCIONAL SENA -->
+  <footer class="bg-slate-900 text-slate-400 text-sm border-t border-slate-800 py-12">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      
+      <div class="flex flex-col md:flex-row items-center justify-between gap-6 pb-8 border-b border-slate-800">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full bg-sena text-white flex items-center justify-center font-black text-sm">
+            SENA
+          </div>
+          <div>
+            <p class="font-bold text-white text-sm">Servicio Nacional de Aprendizaje (SENA)</p>
+            <p class="text-xs text-slate-400">Ministerio del Trabajo • República de Colombia</p>
+          </div>
+        </div>
+
+        <div class="text-xs text-center md:text-right">
+          <p>Material pedagógico de libre acceso para la comunidad SENA</p>
+          <p class="text-slate-500 mt-0.5">Control de Versiones con Git, GitHub y GitSchool</p>
+        </div>
+      </div>
+
+      <div class="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
+        <p>© 2025 SENA. Desarrollado con Tailwind CSS y JavaScript Vanilla.</p>
+        <div class="flex items-center gap-4">
+          <a href="#storage-banner" id="btn-reopen-privacy" class="hover:text-emerald-400 underline transition-colors">Configurar privacidad / almacenamiento</a>
+          <span>•</span>
+          <a href="https://www.sena.edu.co" target="_blank" rel="noopener noreferrer" class="hover:text-emerald-400 transition-colors">Portal Oficial SENA</a>
+        </div>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- SCRIPT JAVASCRIPT VANILLA -->
+  <script>
+    /**
+     * ========================================================
+     * SCRIPT PRINCIPAL: ANIMACIONES, LOCALSTORAGE Y CONTADOR
+     * ========================================================
+     */
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+      /* --------------------------------------------------------
+       * 1. OBSERVADOR DE ANIMACIONES DE ENTRADA (IntersectionObserver)
+       * Anima suavemente elementos al entrar en el viewport.
+       * -------------------------------------------------------- */
+      const fadeElements = document.querySelectorAll('.fade-element');
+      
+      const elementObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            observer.unobserve(entry.target); // Dejar de observar una vez animado
+          }
+        });
+      }, {
+        threshold: 0.12,
+        rootMargin: '0px 0px -40px 0px'
+      });
+
+      fadeElements.forEach(el => elementObserver.observe(el));
+
+      /* --------------------------------------------------------
+       * 2. ANIMACIÓN DE LA LÍNEA DE TIEMPO DEL FLUJO GIT
+       * Llena la barra vertical cuando la sección de flujo se hace visible.
+       * -------------------------------------------------------- */
+      const flujoSection = document.getElementById('flujo');
+      const progressBar = document.getElementById('flujo-progress-bar');
+
+      if (flujoSection && progressBar) {
+        const timelineObserver = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              progressBar.classList.add('active');
+            }
+          });
+        }, { threshold: 0.2 });
+
+        timelineObserver.observe(flujoSection);
+      }
+
+      /* --------------------------------------------------------
+       * 3. LÓGICA DE ALMACENAMIENTO (localStorage) Y CONTADOR
+       * Gestiona el consentimiento del usuario y la cuenta de visitas.
+       * -------------------------------------------------------- */
+      const STORAGE_CONSENT_KEY = 'sena_storage_consent';
+      const VISIT_COUNT_KEY = 'sena_visit_count';
+
+      const storageBanner = document.getElementById('storage-banner');
+      const btnAcceptStorage = document.getElementById('btn-accept-storage');
+      const btnRejectStorage = document.getElementById('btn-reject-storage');
+      const visitCountDisplay = document.getElementById('visit-count-display');
+      const btnResetVisits = document.getElementById('btn-reset-visits');
+      const btnReopenPrivacy = document.getElementById('btn-reopen-privacy');
+
+      // Función para verificar si hay soporte de almacenamiento
+      function isLocalStorageAvailable() {
+        try {
+          const test = '__test__';
+          localStorage.setItem(test, test);
+          localStorage.removeItem(test);
+          return true;
+        } catch (e) {
+          return false;
+        }
+      }
+
+      const hasStorageSupport = isLocalStorageAvailable();
+
+      // Leer estado de consentimiento previo ('accepted', 'rejected' o null)
+      function getConsentStatus() {
+        if (!hasStorageSupport) return 'rejected';
+        return localStorage.getItem(STORAGE_CONSENT_KEY);
+      }
+
+      // Actualizar visualmente el contador en el header
+      function updateVisitUI() {
+        const consent = getConsentStatus();
+        if (consent === 'accepted' && hasStorageSupport) {
+          let count = parseInt(localStorage.getItem(VISIT_COUNT_KEY) || '0', 10);
+          visitCountDisplay.textContent = count;
+        } else if (consent === 'rejected') {
+          visitCountDisplay.textContent = 'Desactivado';
+        } else {
+          visitCountDisplay.textContent = 'Pendiente';
+        }
+      }
+
+      // Incrementar contador si el usuario ya aceptó
+      function handleVisitIncrement() {
+        const consent = getConsentStatus();
+        if (consent === 'accepted' && hasStorageSupport) {
+          let count = parseInt(localStorage.getItem(VISIT_COUNT_KEY) || '0', 10);
+          count += 1;
+          localStorage.setItem(VISIT_COUNT_KEY, count.toString());
+        }
+        updateVisitUI();
+      }
+
+      // Mostrar el banner de privacidad con animación suave
+      function showBanner() {
+        storageBanner.classList.remove('pointer-events-none');
+        storageBanner.classList.remove('translate-y-24', 'opacity-0');
+        storageBanner.classList.add('translate-y-0', 'opacity-100');
+      }
+
+      // Ocultar el banner
+      function hideBanner() {
+        storageBanner.classList.remove('translate-y-0', 'opacity-100');
+        storageBanner.classList.add('translate-y-24', 'opacity-0');
+        storageBanner.classList.add('pointer-events-none');
+      }
+
+      // Aceptar almacenamiento
+      btnAcceptStorage.addEventListener('click', () => {
+        if (hasStorageSupport) {
+          localStorage.setItem(STORAGE_CONSENT_KEY, 'accepted');
+          // Iniciar contador o sumar visita actual
+          let count = parseInt(localStorage.getItem(VISIT_COUNT_KEY) || '0', 10);
+          count += 1;
+          localStorage.setItem(VISIT_COUNT_KEY, count.toString());
+        }
+        hideBanner();
+        updateVisitUI();
+      });
+
+      // Rechazar almacenamiento: no escribe datos persistentes y borra si existían
+      btnRejectStorage.addEventListener('click', () => {
+        if (hasStorageSupport) {
+          try {
+            localStorage.removeItem(VISIT_COUNT_KEY);
+            // Registramos la decisión en session o temporal para no seguir molestando en la sesión
+            sessionStorage.setItem(STORAGE_CONSENT_KEY, 'rejected');
+            localStorage.setItem(STORAGE_CONSENT_KEY, 'rejected');
+          } catch (e) {}
+        }
+        hideBanner();
+        updateVisitUI();
+      });
+
+      // Reiniciar contador
+      btnResetVisits.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (getConsentStatus() === 'accepted' && hasStorageSupport) {
+          if (confirm('¿Deseas reiniciar tu contador de visitas a 1?')) {
+            localStorage.setItem(VISIT_COUNT_KEY, '1');
+            updateVisitUI();
+          }
+        } else {
+          alert('El almacenamiento local está desactivado. Actívalo en la sección de privacidad para registrar visitas.');
+          showBanner();
+        }
+      });
+
+      // Enlace para volver a configurar la privacidad
+      if (btnReopenPrivacy) {
+        btnReopenPrivacy.addEventListener('click', (e) => {
+          e.preventDefault();
+          showBanner();
+        });
+      }
+
+      // Inicialización del banner de consentimiento al cargar
+      const currentConsent = getConsentStatus();
+      if (!currentConsent) {
+        // Primera visita: mostrar banner tras un breve retardo pedagógico
+        setTimeout(showBanner, 900);
+      } else {
+        handleVisitIncrement();
+      }
+
+      /* --------------------------------------------------------
+       * 4. MENÚ MÓVIL RESPONSIVE
+       * Permite abrir y cerrar el menú en dispositivos móviles.
+       * -------------------------------------------------------- */
+      const mobileBtn = document.getElementById('mobile-menu-btn');
+      const mobileMenu = document.getElementById('mobile-menu');
+      const mobileLinks = document.querySelectorAll('.mobile-nav-link');
+
+      if (mobileBtn && mobileMenu) {
+        mobileBtn.addEventListener('click', () => {
+          mobileMenu.classList.toggle('hidden');
+        });
+
+        mobileLinks.forEach(link => {
+          link.addEventListener('click', () => {
+            mobileMenu.classList.add('hidden');
+          });
+        });
+      }
+
+    });
+  </script>
+</body>
+</html>
